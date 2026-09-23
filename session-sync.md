@@ -52,6 +52,38 @@
 
 “等待到齐”和“校验失败”应使用不同提示，避免把正常的传输延迟误报为数据损坏。
 
+### 2.3 涉及的目录与数据流转
+
+一次跨设备迁移涉及三类目录，它们互不相同，也不能互相重叠（`root` 的边界校验见附录 B.1）：
+
+| 目录 | 由谁决定 | 典型位置 | 存放什么 | 是否参与同步 |
+|---|---|---|---|---|
+| 本地会话与附件存储 | Harness 固定行为 | `<DSH_HOME>/sessions`、`<DSH_HOME>/attachments/v1/{objects,file-objects,files}` | 会话日志（append-only JSONL，默认 zstd 压缩）与附件对象 | 不同步；数据从这里导出，导入的数据写回这里 |
+| 本地同步目录（插件配置 `root`） | 用户在设置页指定 | 如 `~/Dropbox/DSH Sync` | 同步包：`dsh-session-sync/{objects,sessions,trees,tmp}`（结构见附录 C） | 同步；由外部云盘客户端把它与云端保持一致 |
+| 云端同步数据 | 外部云盘服务 | 云盘账户中的远端目录 | 与本地同步目录相同的内容 | 中转；本插件不直接读写（阶段 1），由云盘客户端上传下载 |
+
+`DSH_HOME` 是 Harness 的数据根目录，解析顺序为：显式配置 → `$DSH_HOME` 环境变量 → 默认 `~/.dsh`。**会话日志与附件不出现在同步目录中，同步目录里也没有项目源码**——同步包是从本地存储*生成*的逻辑快照，不是存储文件的复制；`root` 与 `$DSH_HOME/sessions`、attachment 根重叠会被配置校验拒绝。
+
+一次导出—传输—导入的完整数据流如下：
+
+```mermaid
+flowchart LR
+    subgraph 设备A
+        SA[本地会话存储<br/>DSH_HOME/sessions] -->|persistence 读取| EX[导出：生成对象与清单]
+        ATT[本地附件存储<br/>DSH_HOME/attachments/v1] -->|收集并校验摘要| EX
+        EX -->|先写 tmp 再 rename 提交| DIRA[设备A同步目录<br/>root/dsh-session-sync/]
+    end
+    DIRA -->|外部云盘客户端上传| CLOUD[(云端同步数据)]
+    CLOUD -->|外部云盘客户端下载| DIRB
+    subgraph 设备B
+        DIRB[设备B同步目录<br/>root/dsh-session-sync/] -->|扫描 trees 与清单| IMP[导入：校验哈希与历史比较]
+        IMP -->|create / append 写回| SB[本地会话存储<br/>DSH_HOME/sessions]
+        IMP -->|附件导入接口还原| ATTB[本地附件存储<br/>DSH_HOME/attachments/v1]
+    end
+```
+
+图中未出现的流转同样重要：**项目源码与工作区文件**（用户自行准备，见 §1 能力边界）、**派生数据**（搜索索引、投影缓存，导入后在设备 B 重建，见附录 D.2.6）、**运行现场**（终端、进程、审批状态，不迁移）都不经过这条链路。设备 A 的同步目录写完后，何时出现在设备 B 取决于云盘客户端，导出完成不代表对端已到齐（§2.1 第 3 步）。
+
 ## 3. 交付范围：本次做什么，后续做什么
 
 ### 3.1 首阶段范围
@@ -203,7 +235,7 @@ flowchart TD
 | T2 | WebDAV 以 ETag 对比判断内容相同及不可覆盖 | 哪些服务满足所需语义；写后检查能证明什么；还需哪些防覆盖条件与测试 |
 | T3 | 目录契约 C5 同时涉及条目完整性与枚举不漏项 | 分开定义“返回条目可读”和“已提交对象最终可发现”，明确分页与延迟边界 |
 | T4 | 导入前全量校验，但写入按会话、按事件批次执行 | 中途失败如何恢复、如何报告部分导入；是否需要树级事务，当前原文尚未明确 |
-| T5 | `DAV_API.md` 的服务特定行为被用于介绍多种 WebDAV 服务 | 补齐接口文档和适用服务；分页、锁、MOVE、属性行为不能未经验证推广到所有服务 |
+| T5 | WebDAV 适配引用的服务特定行为被用于介绍多种 WebDAV 服务 | 接口文档与其实现映射见 `clouds/WebDAV.md`；分页、锁、MOVE、属性行为不能未经验证推广到所有服务 |
 | T6 | WebDAV 超限正文与错误码表的映射不一致 | 统一超限错误为一个对外语义，并补全错误码定义与测试 |
 | T7 | 部分契约测试期望仅靠插件发现目录漏项或远端覆盖 | 明确测试观测点及证据；契约声明、自检和插件校验各自能发现什么 |
 | T8 | WebDAV 凭据撤销与 OAuth 通用退出流程混写 | 按服务能力说明远端撤销和本地清除；不能把某种授权模型的操作视为所有服务通用 |
@@ -246,6 +278,8 @@ flowchart TD
 | 索引（index） | 云盘后端保存的对象状态与远端元数据 |
 | 上传日志（journal） | 保存尚未完成上传的本地数据和恢复信息 |
 | `cwd` | 会话原工作目录；与云盘同步目录、远端存储路径是不同概念 |
+| `DSH_HOME` | Harness 数据根目录；显式配置 → `$DSH_HOME` 环境变量 → 默认 `~/.dsh`。会话日志与附件存储都位于其下 |
+| 本地同步目录 | 插件配置 `root` 指向的本机目录，存放同步包并由外部云盘客户端与云端保持一致；与会话存储、附件存储互不重叠 |
 
 ---
 
@@ -259,7 +293,8 @@ flowchart TD
 1. Session 日志是 append-only 的物理存储。
    - 逻辑读取通过 `SessionPersistence.open(id, 'read'|'write')` 和 `SessionHandle`；
    - header 一旦创建不可变；
-   - `cwd` 同时决定物理存储路径和 Workspace 归属校验。
+   - `cwd` 同时决定物理存储路径和 Workspace 归属校验；
+   - 生产组合把持久化根固定为 `<DSH_HOME>/sessions`（`DSH_HOME` 解析顺序见术语速查），目录内按归一化 `cwd` 与 Session id 分层（`dsh-session-persistence-jsonl`）。
 
 2. `cwd` 是 UI 可见性的关键字段。
    - `ApiSessionList.list()` 会跳过 `cwd === undefined` 的 cold Session；
@@ -295,7 +330,7 @@ flowchart TD
 
 ## B 插件接口、目录契约与后端选择
 
-统一目录接口是插件与后端的实现边界。声明、运行时检查和一致性测试应分别验证，详见主文 T1–T3、T7。
+统一目录接口是插件与后端的实现边界。声明、运行时检查和一致性测试应分别验证，详见主文 T1–T3、T7。各 `cloud` 后端的设计文档位于仓库子目录 [`clouds/`](./clouds/index.md)（现阶段仅 WebDAV 设计稿，代码实现随对应阶段交付）；本附录给出契约与选型依据，不维护逐文件清单。
 
 ### B.1 session-sync 插件
 
@@ -399,6 +434,15 @@ interface SyncRootFsFactory {
 
 `backend: dir` 时 `root` 必须是本机可访问的路径。`backend: cloud` 时 `root` 不参与配置：远端路径与状态目录属于 `cloud` 后端的配置（附录 F.11），插件的配置里看不到厂商侧路径，也拒绝接受。
 
+#### B.1.1 附录实现索引
+
+各 `cloud` 后端的设计文档存放在子目录 [`clouds/`](./clouds/index.md)；现阶段（阶段 1）仅保留设计稿，不包含可运行实现：
+
+| 内容 | 位置 | 依据 |
+|---|---|---|
+| WebDAV 适配设计稿：`SyncProvider`（附录 F.7）实现映射、`SyncRootFs` 组合、提交协议、错误映射、陷阱、测试计划与实现前缺口 | `clouds/WebDAV.md` | 附录 F.7 / G，接口依据见该文档 |
+
+后端 `dir` 的设计已由本附录 B.2 / B.3 完整覆盖（本地文件系统语义直读），无需单独文档。各后端的代码实现随对应阶段交付；阶段 1 生产配置仅允许 `backend: dir`，`kind: 'cloud'` 在实现落地并通过契约测试前由配置校验拒绝。设计稿的提交协议含「提交前探针」（目标已存在：同内容幂等跳过 / 异内容 `SYNC_REMOTE_CONFLICT`，双方保留），是对附录 G.5 草案的强化。
 
 ### B.2 后端 `dir`：本地目录（外部云盘客户端填充）
 
@@ -1145,9 +1189,9 @@ syncCloud:
 
 ## G WebDAV 服务适配草案
 
-> **适用范围与待核验事项 T2 / T5**：原文引用的 `DAV_API.md` 未随本次材料提供。下文涉及 sandbox、分页、属性联动、错误名、锁和上传限制的描述，均按该文档对应服务的适配假设保留，不能视为所有 WebDAV 服务的共同保证。
+> **适用范围与待核验事项 T2 / T5**：WebDAV 接口的实现映射见 [`clouds/WebDAV.md`](./clouds/WebDAV.md)（描述单一服务的标准 DAV 面，不含 `NsDav*` / `NSDav*` 扩展）。下文涉及 sandbox、分页、属性联动、错误名、锁和上传限制的描述均以该映射为准；它描述的是单一服务的当前实现，不能视为所有 WebDAV 服务的共同保证，逐服务验证结论须按附录 J Q21 补齐。该 profile 的设计稿同样位于 [`clouds/WebDAV.md`](./clouds/WebDAV.md)（目录索引见 [`clouds/index.md`](./clouds/index.md)，代码随阶段 2 交付）。
 
-接口依据：原文所引 `DAV_API.md`（不含 `NsDav*` / `NSDav*` 扩展）。这一节回答一个具体问题：当"云厂商 API"本身就是 WebDAV 时，附录 F 的哪些部分还需要、哪些部分不需要。
+接口依据：[`clouds/WebDAV.md`](./clouds/WebDAV.md) 按附录 F.7 的 `SyncProvider` 接口给出的 WebDAV 实现映射（不含 `NsDav*` / `NSDav*` 扩展）。这一节回答一个具体问题：当"云厂商 API"本身就是 WebDAV 时，附录 F 的哪些部分还需要、哪些部分不需要。
 
 ### G.1 最重要的等价关系
 
@@ -1158,7 +1202,7 @@ syncCloud:
 - 附录 F.4 的状态机退化为 `PUT(tmp) → MOVE(final)`，`index` 从正确性边界降级为纯缓存；
 - 此 profile 依赖服务端 `MOVE` 的提交保证，与附录 F 的对象型 provider 不同；该保证须针对具体服务验证。
 
-必须同父目录。`DAV_API.md` §3.10：只有"同一 sandbox 且源和目标父目录相同"才走原子重命名路径，其他情况是"复制源对象 + 删除源对象"。所以：
+必须同父目录。`MOVE` 的原子性边界（`clouds/WebDAV.md` §3.4）：只有"同一 sandbox 且源和目标父目录相同"才走原子重命名路径，其他情况是"复制源对象 + 删除源对象"。所以：
 
 - 临时对象必须写在目标对象的同一目录下，命名 `.dsh-tmp-<uuid>`（点开头）；
 - 禁止把 `<syncRoot>/dsh-session-sync/tmp/` 当作 WebDAV 的暂存位置，跨目录 `MOVE` 不原子，直接破坏 C2；
