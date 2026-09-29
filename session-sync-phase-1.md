@@ -1,6 +1,6 @@
 # 阶段 1：通过同步目录手动迁移 Session
 
-> 状态：设计稿，尚未实现。本文定义阶段 1 的同步包、`dir` 后端、导入导出、dsh `/sync` 指令和独立 Web UI。产品边界见[总览](./session-sync.md)，直连和自动同步见[阶段 2](./session-sync-phase-2.md)。实施前须对照当前代码核验 Harness API、Host 路由和配置写入能力。
+> 状态：设计稿，尚未实现。本文定义阶段 1 的同步包、`dir` 后端、导入导出、dsh `/sync` 指令和独立 Web UI。产品边界见[总览](./session-sync.md)；在 Web UI 保存配置时触发的一次导入或导出见[阶段 1.5](./session-sync-phase-1.5.md)，直连和后台自动同步见[阶段 2](./session-sync-phase-2.md)。实施前须对照当前代码核验 Harness API、Host 路由和配置写入能力。
 
 ## 用户流程与交付
 
