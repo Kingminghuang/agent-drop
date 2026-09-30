@@ -1,0 +1,37 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write packages/sync/session-sync-web/README.md
+/:
+  en: 096b1a976b236fb0
+  zh: e23e4be0259772e4
+/deepseek-ai-dsh-session-sync-web:
+  en: 9b46ab7e56ac75e8
+  zh: 260f37ac549ecbdc
+/deepseek-ai-dsh-session-sync-web/summary:
+  en: 141676019285f085
+  zh: 66107cb86ef9c9a2
+/deepseek-ai-dsh-session-sync-web/table-of-contents:
+  en: ec82c33806eeca6b
+  zh: fbb801d1fe231eff
+/deepseek-ai-dsh-session-sync-web/use-this-package:
+  en: 6181cc1c062f41e1
+  zh: a40e19fa23640c2c
+/deepseek-ai-dsh-session-sync-web/routes-and-access:
+  en: bee0ec3a14eb786e
+  zh: 111866a3a8728edc
+/deepseek-ai-dsh-session-sync-web/further-exploration:
+  en: b13a5add2c775460
+  zh: dd9f98bc07347a3a
+/deepseek-ai-dsh-session-sync-web/model-experience:
+  en: da448c5e01c72100
+  zh: 066d139617c37ee3
+/deepseek-ai-dsh-session-sync-web/model-experience/kv-cache-effect:
+  en: b7ae543bbe2fa430
+  zh: ef1d0aaf8f34ed57
+/deepseek-ai-dsh-session-sync-web/known-limitations-and-deferred-work:
+  en: 70601fc6cb755ed1
+  zh: 955f414e391201e0
+/deepseek-ai-dsh-session-sync-web/dev-note:
+  en: 5de1d6304e00c58f
+  zh: 9a751ee36b0dfbc5

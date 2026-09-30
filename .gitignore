@@ -1,1 +1,4 @@
 .workbuddy
+node_modules/
+lib/
+*.tsbuildinfo

@@ -1,0 +1,49 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write packages/sync/session-sync-format/README.md
+/:
+  en: 734eaedf611cf825
+  zh: b2deab5c4228cd08
+/deepseek-ai-dsh-session-sync-format:
+  en: cc46df42c26b9e33
+  zh: 238cada41fce0388
+/deepseek-ai-dsh-session-sync-format/summary:
+  en: 45231c9128535e1a
+  zh: 3f2653c835a6198e
+/deepseek-ai-dsh-session-sync-format/table-of-contents:
+  en: 4d5ec89f7a524c33
+  zh: 891f44d774429727
+/deepseek-ai-dsh-session-sync-format/use-this-package:
+  en: 543a9f309feeb062
+  zh: 6da266a698325024
+/deepseek-ai-dsh-session-sync-format/use-this-package/the-medium-layout:
+  en: b098cd14a67e5781
+  zh: aca2b4ea873ae4c9
+/deepseek-ai-dsh-session-sync-format/use-this-package/tree-manifests:
+  en: 7cd37c30c878b4f7
+  zh: 11cce47fd98936fe
+/deepseek-ai-dsh-session-sync-format/use-this-package/portable-working-directories:
+  en: 00b3d140d9d2b72e
+  zh: 213551d6ac91e481
+/deepseek-ai-dsh-session-sync-format/use-this-package/attachment-references:
+  en: 9dc3b55c525bb2f1
+  zh: 2988c09ad385e05a
+/deepseek-ai-dsh-session-sync-format/understand-the-implementation:
+  en: 988305ade79790d1
+  zh: f886d8ffe375534b
+/deepseek-ai-dsh-session-sync-format/further-exploration:
+  en: f26a731d738e0712
+  zh: dc59de754013e0b3
+/deepseek-ai-dsh-session-sync-format/model-experience:
+  en: 387750539de58e12
+  zh: 5f291d0df52ea16b
+/deepseek-ai-dsh-session-sync-format/model-experience/kv-cache-effect:
+  en: 5e27ee37afe58053
+  zh: 37816cfd3cb05e2d
+/deepseek-ai-dsh-session-sync-format/known-limitations-and-deferred-work:
+  en: 0c03c71f7570bc0e
+  zh: dcb8e26ef63f60da
+/deepseek-ai-dsh-session-sync-format/dev-note:
+  en: 5de1d6304e00c58f
+  zh: 3fee785f424f1018

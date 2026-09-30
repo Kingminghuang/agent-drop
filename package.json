@@ -1,0 +1,18 @@
+{
+  "name": "agent-drop",
+  "private": true,
+  "type": "module",
+  "description": "Session-sync plugins for the DeepSeek Harness: manual cross-device session migration through a cloud-replicated directory",
+  "scripts": {
+    "gen:paths": "node scripts/gen-tsconfig-paths.mjs",
+    "typecheck": "node scripts/gen-tsconfig-paths.mjs && tsc --noEmit -p tsconfig.json",
+    "test": "env -u NODE_OPTIONS vitest run",
+    "test:format": "vitest run packages/session-sync-format/tests",
+    "build": "tsc -b packages/session-sync-web/tsconfig.build.json packages/session-sync-dir/tsconfig.build.json packages/session-sync-client/tsconfig.build.json"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2",
+    "vitest": "^4.1.8"
+  }
+}

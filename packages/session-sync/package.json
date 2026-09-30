@@ -1,0 +1,47 @@
+{
+  "name": "@deepseek-ai/dsh-session-sync",
+  "description": "Cross-device session synchronization service (ctx.sessionSync): export, import, scan, and operation state over a registered sync backend",
+  "version": "0.1.7-rc.2",
+  "private": true,
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./types": {
+      "types": "./lib/types.d.ts",
+      "default": "./lib/types.js"
+    },
+    "./backend": {
+      "types": "./lib/backend.d.ts",
+      "default": "./lib/backend.js"
+    },
+    "./paths": {
+      "types": "./lib/paths.d.ts",
+      "default": "./lib/paths.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "src"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "^4.0.4",
+    "@deepseek-ai/dsh-attachment": "^0.1.7-rc.2",
+    "@deepseek-ai/dsh-atomic-write": "^0.1.7-rc.2",
+    "@deepseek-ai/dsh-brand": "^0.1.7-rc.2",
+    "@deepseek-ai/dsh-home-paths": "^0.1.7-rc.2",
+    "@deepseek-ai/dsh-session": "^0.1.7-rc.2",
+    "@deepseek-ai/dsh-session-persistence": "^0.1.7-rc.2",
+    "@deepseek-ai/dsh-session-query": "^0.1.7-rc.2",
+    "@deepseek-ai/dsh-session-sync-format": "^0.1.7-rc.2",
+    "@deepseek-ai/dsh-workspace": "^0.1.7-rc.2",
+    "@deepseek-ai/schemastery": "^1.0.0"
+  }
+}
